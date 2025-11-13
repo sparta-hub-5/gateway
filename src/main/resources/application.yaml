@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+    # 글로벌 필터나 디폴트 필터가 필요하면 여기 추가
+    # default-filters:
+    #   - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+    # (Resilience4j 서킷브레이커 사용 시) 의존성 추가 후 설정
+resilience4j:
+  circuit breaker:
+    instances:
+      my cmd:
+        slidingWindowType: TIME_BASED
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+
+server:
+  port: 8080
+
+app:
+  uri:
+    httpbin: "http://httpbin.org:80"  # 프로필별로 override 가능
