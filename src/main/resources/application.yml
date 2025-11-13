@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
+    gateway:
+      server:
+        webflux:
+      # (예시) routes:
+      #   - id: hub-service-route
+      #     uri: lb://HUB-SERVICE
+      #     predicates:
+      #       - Path=/hub-service/**
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      mycmd:
+        slidingWindowType: TIME_BASED
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+
+app:
+  uri:
+    httpbin: "http://httpbin.org:80"

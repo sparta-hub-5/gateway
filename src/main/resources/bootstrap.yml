@@ -8,6 +8,11 @@ spring:
       discovery:
         enabled: true # 유레카에서 'config-server'를 찾아서 설정을 가져옴
         service-id: config-server # 유레카에 등록된 설정 서버의 이름
+  security:
+    oauth2:
+      resourceserver: # <-- 공백 제거
+        jwt:
+          issuer-uri: http://localhost:8180/realms/test-realm0
 
 # 유레카 서버의 위치
 eureka:

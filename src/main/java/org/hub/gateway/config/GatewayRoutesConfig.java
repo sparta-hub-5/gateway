@@ -33,6 +33,13 @@ public class GatewayRoutesConfig {
             //     .path("/product/**")
             //     .filters(f -> f.rewritePath("/product/(?<segment>.*)", "/${segment}"))
             //     .uri("lb://PRODUCT-SERVICE"))
+            .route("hub-service-route", r -> r
+                .path("/hub-service/**") // 1. "/hub-service/"로 시작하는 모든 요청
+                // 2. "/hub-service/test1" -> "/test1"로 경로 재작성
+                .filters(f -> f.rewritePath("/hub-service/(?<segment>.*)", "/${segment}"))
+                // 3. Eureka에 등록된 "HUB-SERVICE"로 로드 밸런싱
+                .uri("lb://HUB-SERVICE"))
+            // ^^^--- 이 라우트를 추가해야 합니다 ---^^^
 
             .build();
     }
