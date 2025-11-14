@@ -1,19 +1,5 @@
-spring:
-  application:
-    name: gateway-service
-  cloud:
-    config:
-      discovery:
-        enabled: true
-        service-id: config-server
-    gateway:
-      server:
-        webflux:
-      # (예시) routes:
-      #   - id: hub-service-route
-      #     uri: lb://HUB-SERVICE
-      #     predicates:
-      #       - Path=/hub-service/**
+server:
+  port: 9001
 
 resilience4j:
   circuitbreaker:
@@ -24,6 +10,25 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 10s
 
-app:
-  uri:
-    httpbin: "http://httpbin.org:80"
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/hub-user
+
+      client:
+        registration:
+          keycloak:
+            client-id: ${KEYCLOAK_CLIENT_ID}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:3000/v1/user/authorization/code"
+            scope:
+              - openid
+              - profile
+              - email
+
+        provider:
+          keycloak:
+            issuer-uri: https://keycloak.code-factory.co.kr/realms/codefactory
