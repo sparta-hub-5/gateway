@@ -46,6 +46,15 @@ dependencies {
 
     // 맥 로컬 용
     runtimeOnly "io.netty:netty-resolver-dns-native-macos:4.1.128.Final:osx-aarch_64"
+
+    // Spring Cache
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
+    // zipkin
+    // implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'
+    // implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
+
 }
 
 dependencyManagement {
