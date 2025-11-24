@@ -1,63 +1,24 @@
 server:
-  port: 9001
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      mycmd:
-        slidingWindowType: TIME_BASED
-        slidingWindowSize: 10
-        failureRateThreshold: 50
-        waitDurationInOpenState: 10s
+  port: 9090
 
 spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8180/realms/hub-user
+  application:
+    name: gateway-server
+  config:
+    import: 'optional:configserver:'
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
 
-      client:
-        registration:
-          keycloak:
-            client-id: ${KEYCLOAK_CLIENT_ID}
-            client-secret: ${KEYCLOAK_CLIENT_SECRET}
-            authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:3000/v1/user/authorization/code"
-            scope:
-              - openid
-              - profile
-              - email
+eureka:
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
 
-        provider:
-          keycloak:
-            issuer-uri: https://keycloak.code-factory.co.kr/realms/codefactory
-
-    cloud:
-      gateway:
-        discovery:
-          locator:
-            enabled: true
-            lower-case-service-id: true
-
-        routes:
-          - id: hub-service
-            uri: lb://hub-service
-            predicates:
-              - Path=/v1/hub/**
-            filters:
-              - RewritePath=/v1/hub/(?<path>.*), /${path}
-
-          - id: product-service
-            uri: lb://product-service
-            predicates:
-              - Path=/v1/product/**
-            filters:
-              - RewritePath=/v1/product/(?<path>.*), /${path}
-
-          - id: user-service
-            uri: lb://user-service
-            predicates:
-              - Path=/v1/user/**
-            filters:
-              - RewritePath=/v1/user/(?<path>.*), /${path}
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://13.210.162.214:3150/eureka/
