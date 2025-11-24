@@ -1,9 +1,13 @@
 package org.hub.gateway.config;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -19,12 +23,15 @@ import reactor.core.publisher.Mono;
 public class AddUserHeadersGlobalFilter implements GlobalFilter, Ordered {
 
     private static final String HEADER_USER_ID = "X-User-Id";
-    private static final String HEADER_USER_NAME = "X-User-Name";
+    private static final String HEADER_USERNAME = "X-Username";
     private static final String HEADER_ROLES = "X-User-Roles";
+    private static final String HEADER_EMAIL = "X-User-Email";
+    private static final String HEADER_USER_NAME = "X-User-Name";
 
     @Override
     public int getOrder() {
-        return Ordered.LOWEST_PRECEDENCE - 5;
+        //return Ordered.LOWEST_PRECEDENCE - 5;
+        return Ordered.HIGHEST_PRECEDENCE;
     }
 
     @Override
@@ -40,10 +47,18 @@ public class AddUserHeadersGlobalFilter implements GlobalFilter, Ordered {
                 Jwt jwt = jwtAuth.getToken();
 
                 List<String> roles = extractRoles(jwt);
+
+                String name = Objects.toString(jwt.getClaimAsString("family_name"), "") +
+                    Objects.toString(jwt.getClaimAsString("given_name"), "");
+                name = URLEncoder.encode(name, StandardCharsets.UTF_8);
+
                 ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
                     .header(HEADER_USER_ID, jwt.getSubject() != null ? jwt.getSubject() : "")
-                    .header(HEADER_USER_NAME, jwt.getClaimAsString("preferred_username") != null ? jwt.getClaimAsString("preferred_username") : "")
-                    .header(HEADER_ROLES, String.join(",", roles))
+                    .header(HEADER_USERNAME, jwt.getClaimAsString("preferred_username") != null ? jwt.getClaimAsString("preferred_username") : "")
+                    .header(HEADER_ROLES,  roles.stream().filter(s -> s.startsWith("ROLE_")).collect(
+                        Collectors.joining(",")))
+                    .header(HEADER_EMAIL, Objects.requireNonNullElse(jwt.getClaimAsString("email"), ""))
+                    .header(HEADER_USER_NAME, name)
                     .build();
 
                 ServerWebExchange mutatedExchange = exchange.mutate().request(mutatedRequest).build();

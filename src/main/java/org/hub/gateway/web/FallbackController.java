@@ -22,4 +22,11 @@ public class FallbackController {
             .status(HttpStatus.SERVICE_UNAVAILABLE)
             .body("User-Service가 응답하지 않습니다. 잠시 후 다시 시도해주세요."));
     }
+
+    @GetMapping("/hub")
+    public Mono<ResponseEntity<String>> hubServiceFallback() {
+        return Mono.just(ResponseEntity
+            .status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body("Hub-Service가 응답하지 않습니다. 잠시 후 다시 시도해주세요."));
+    }
 }
