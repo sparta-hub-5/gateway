@@ -64,6 +64,9 @@ dependencies {
     testImplementation 'io.projectreactor:reactor-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    // ---swagger---
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.14'
+
 }
 
 dependencyManagement {
