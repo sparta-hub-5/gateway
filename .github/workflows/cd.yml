@@ -1,0 +1,81 @@
+name: Build & Deploy Gateway
+
+on:
+  push:
+    branches: [ "main" ] # main 브랜치 push/merge 시 트리거
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: sparta-hub-5/gateway
+  VERSION: latest
+
+jobs:
+  ImageBuild:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    environment: deploy
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Build container image
+        run: |
+          IMAGE=$REGISTRY/$IMAGE_NAME:$VERSION
+          chmod +x gradlew
+          ./gradlew bootJar
+          docker build -t $IMAGE .
+          echo "IMAGE_URI=$IMAGE" >> $GITHUB_ENV
+
+      - name: Log into container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish container image
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+
+  DeployToEC2:
+    name: Deploy to EC2
+    needs: ImageBuild           # 이미지 빌드 성공 후에만 실행
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH into EC2 and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+
+            # GHCR 로그인 (PAT 필요)
+            docker login ${{ env.REGISTRY }} \
+              -u ${{ secrets.GHCR_USERNAME }} \
+              -p ${{ secrets.GHCR_TOKEN }}
+
+            # 최신 이미지 pull
+            docker pull $IMAGE
+
+            # 기존 컨테이너 정리
+            docker stop gateway || true
+            docker rm gateway || true
+
+            # 새 컨테이너 실행
+            docker run -d --name gateway \
+              -p 5555:5555 \
+              $IMAGE
