@@ -52,6 +52,7 @@ jobs:
     name: Deploy to EC2
     needs: ImageBuild           # 이미지 빌드 성공 후에만 실행
     runs-on: ubuntu-latest
+    environment: gateway-cd
 
     steps:
       - name: SSH into EC2 and deploy
